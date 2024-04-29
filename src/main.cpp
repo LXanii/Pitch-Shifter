@@ -8,13 +8,12 @@ using namespace geode::prelude;
 
 void deleteSongs(std::filesystem::path folderPath, std::filesystem::path songLocation, int songID) {
 	auto gdFolderPath = std::filesystem::current_path();
-	log::info("Deleting and swapping");
-	Sleep(1000);
 	DeleteFile(fmt::format("{}\\{}copy.mp3",folderPath, songID).c_str());
 	DeleteFile(fmt::format("{}\\{}.wav",folderPath, songID).c_str());
 	DeleteFile(fmt::format("{}\\{}wav.wav",folderPath, songID).c_str());
 	std::filesystem::copy(fmt::format("{}\\{}.mp3", folderPath, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
 	DeleteFile(fmt::format("{}\\{}.mp3",folderPath, songID).c_str());
+	FLAlertLayer::create("Pitch Shifter", "<cg>Your song has been pitched!</c>", "OK")->show();
 }
 
 void pitchSong(int songID, int pitchShift) {
@@ -40,7 +39,6 @@ void pitchSong(int songID, int pitchShift) {
 			std::string convertWav = fmt::format("ffmpeg -y -i {}copy.mp3 {}wav.wav -loglevel quiet", songID, songID);
 			std::string shiftWav = fmt::format("sox --no-show-progress {}wav.wav {}.wav pitch {}", songID, songID, pitchShift);
 			std::string convertMp3 = fmt::format("ffmpeg -y -i {}.wav -acodec libmp3lame {}.mp3 -loglevel quiet", songID, songID);
-			std::cout << "This may take a little bit.." << std::endl;
 			system(fmt::format("cd {} && {} && {} && {}", folderPath, convertWav, shiftWav, convertMp3).c_str());
 			deleteSongs(folderPath, songLocation, songID);
 		}
@@ -49,7 +47,6 @@ void pitchSong(int songID, int pitchShift) {
 	else if (appdata != NULL && pitchShift == 0) {
 		DeleteFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str());
 		std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
-		log::info("reverting song {} {}", folderPath, songID);
 	}
 }
 
@@ -85,9 +82,15 @@ int songID;
 
 	void songPitch(CCObject*) {
 		if (Mod::get()->getSettingValue<int64_t>("pitch") != 0) {
-			FLAlertLayer::create("Pitch Shifter", "Your song has been pitched!", "OK")->show();
+			geode::createQuickPopup("Pitch Shifter", "This will take <cg>~10 seconds</c> to complete.\n<cr>Do not close the game while this processes.</c>", "Cancel", "OK", [this] (auto fl, bool btn2) {
+                if (btn2)
+				pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));
+			});
 		}
-		pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));
+		else {
+			pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));
+			FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", m_fields->songID), "OK")->show();
+		}
 	}
 
 	void openSettings(CCObject*) {
