@@ -1,22 +1,36 @@
 #include <Geode/Geode.hpp>
+#include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/modify/CustomSongWidget.hpp>
 #include <Geode/ui/GeodeUI.hpp>
 #include <ShlObj_core.h>
 #include <filesystem>
 
 using namespace geode::prelude;
+std::string songName;
+int songID;
+bool robSong;
 
-void deleteSongs(std::filesystem::path folderPath, std::filesystem::path songLocation, int songID) {
+void deleteSongs(std::filesystem::path folderPath, std::filesystem::path songLocation, int songID, bool isRobtopSong) {
 	auto gdFolderPath = std::filesystem::current_path();
-	DeleteFile(fmt::format("{}\\{}copy.mp3",folderPath, songID).c_str());
-	DeleteFile(fmt::format("{}\\{}.wav",folderPath, songID).c_str());
-	DeleteFile(fmt::format("{}\\{}wav.wav",folderPath, songID).c_str());
-	std::filesystem::copy(fmt::format("{}\\{}.mp3", folderPath, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
-	DeleteFile(fmt::format("{}\\{}.mp3",folderPath, songID).c_str());
-	FLAlertLayer::create("Pitch Shifter", "<cg>Your song has been pitched!</c>", "OK")->show();
+	if (!isRobtopSong) {
+		DeleteFile(fmt::format("{}\\{}copy.mp3",folderPath, songID).c_str());
+		DeleteFile(fmt::format("{}\\{}.wav",folderPath, songID).c_str());
+		DeleteFile(fmt::format("{}\\{}wav.wav",folderPath, songID).c_str());
+		std::filesystem::copy(fmt::format("{}\\{}.mp3", folderPath, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
+		DeleteFile(fmt::format("{}\\{}.mp3",folderPath, songID).c_str());
+		FLAlertLayer::create("Pitch Shifter", "<cg>Your song has been pitched!</c>", "OK")->show();
+	}
+	else {
+		DeleteFile(fmt::format("{}\\{}copy.mp3",folderPath, songName).c_str());
+		DeleteFile(fmt::format("{}\\{}.wav",folderPath, songName).c_str());
+		DeleteFile(fmt::format("{}\\{}wav.wav",folderPath, songName).c_str());
+		std::filesystem::copy(fmt::format("{}\\{}.mp3", folderPath, songName).c_str(), fmt::format("{}\\{}.mp3", songLocation, songName).c_str(), std::filesystem::copy_options::update_existing);
+		DeleteFile(fmt::format("{}\\{}.mp3",folderPath, songName).c_str());
+		FLAlertLayer::create("Pitch Shifter", "<cg>Your song has been pitched!</c>", "OK")->show();
+	}
 }
 
-void pitchSong(int songID, int pitchShift) {
+void pitchSong(int songID, int pitchShift, bool isRobtopSong) {
 	PWSTR appdata = NULL;
 	std::string songLocation;
 	if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appdata) == S_OK) {
@@ -31,43 +45,103 @@ void pitchSong(int songID, int pitchShift) {
 	auto gdFolderPath = std::filesystem::current_path();
 	auto folderPath = gdFolderPath;
 	folderPath += "\\geode\\unzipped\\xanii.pitch_shifter\\resources\\xanii.pitch_shifter";
+	auto robtopSongLoc = gdFolderPath += "\\Resources";
+	switch(songID) {
+		case 0: songName = "StereoMadness"; break;
+		case 1: songName = "BackOnTrack"; break;
+		case 2: songName = "Polargeist"; break;
+		case 3: songName = "DryOut"; break;
+		case 4: songName = "BaseAfterBase"; break;
+		case 5: songName = "CantLetGo"; break;
+		case 6: songName = "Jumper"; break;
+		case 7: songName = "TimeMachine"; break;
+		case 8: songName = "Cycles"; break;
+		case 9: songName = "xStep"; break;
+		case 10: songName = "Clutterfunk"; break;
+		case 11: songName = "TheoryOfEverything"; break;
+		case 12: songName = "Electroman"; break;
+		case 13: songName = "Clubstep"; break;
+		case 14: songName = "Electrodynamix"; break;
+		case 15: songName = "HexagonForce"; break;
+		case 16: songName = "BlastProcessing"; break;
+		case 17: songName = "TheoryOfEverything2"; break;
+		case 18: songName = "GeometricalDominator"; break;
+		case 19: songName = "Deadlocked"; break;
+		case 20: songName = "Fingerdash"; break;
+		case 21: songName = "Dash"; break;
+	}
+	log::info("{} {}", songName, songID);
 	if (appdata != NULL && pitchShift != 0) {
-		if (std::filesystem::exists(fmt::format("{}\\{}.mp3", songLocation, songID))) {
-			if (!std::filesystem::exists(fmt::format("{}\\pitch_backups", gdFolderPath).c_str())) CreateDirectoryA(fmt::format("{}\\pitch_backups", gdFolderPath).c_str(), NULL);
-			CopyFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), fmt::format("{}\\{}copy.mp3", folderPath, songID).c_str(), true);
-			CopyFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID).c_str(), true);
-			std::string convertWav = fmt::format("ffmpeg -y -i {}copy.mp3 {}wav.wav -loglevel quiet", songID, songID);
-			std::string shiftWav = fmt::format("sox --no-show-progress {}wav.wav {}.wav pitch {}", songID, songID, pitchShift);
-			std::string convertMp3 = fmt::format("ffmpeg -y -i {}.wav -acodec libmp3lame {}.mp3 -loglevel quiet", songID, songID);
-			system(fmt::format("cd {} && {} && {} && {}", folderPath, convertWav, shiftWav, convertMp3).c_str());
-			deleteSongs(folderPath, songLocation, songID);
+		if (!isRobtopSong) {
+			if (std::filesystem::exists(fmt::format("{}\\{}.mp3", songLocation, songID))) {
+				if (!std::filesystem::exists(fmt::format("{}\\pitch_backups", gdFolderPath).c_str())) CreateDirectoryA(fmt::format("{}\\pitch_backups", gdFolderPath).c_str(), NULL);
+				CopyFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), fmt::format("{}\\{}copy.mp3", folderPath, songID).c_str(), true);
+				CopyFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID).c_str(), true);
+				std::string convertWav = fmt::format("ffmpeg -y -i {}copy.mp3 {}wav.wav -loglevel quiet", songID, songID);
+				std::string shiftWav = fmt::format("sox --no-show-progress {}wav.wav {}.wav pitch {}", songID, songID, pitchShift);
+				std::string convertMp3 = fmt::format("ffmpeg -y -i {}.wav -acodec libmp3lame {}.mp3 -loglevel quiet", songID, songID);
+				system(fmt::format("cd {} && {} && {} && {}", folderPath, convertWav, shiftWav, convertMp3).c_str());
+				deleteSongs(folderPath, songLocation, songID, isRobtopSong);
+			}
+			else log::debug("Original Song Location not found.");
 		}
-		else log::debug("Sound file not found");
+		else {
+			if (std::filesystem::exists(fmt::format("{}\\{}.mp3", robtopSongLoc, songName))) {
+				if (!std::filesystem::exists(fmt::format("{}\\pitch_backups", gdFolderPath).c_str())) CreateDirectoryA(fmt::format("{}\\pitch_backups", gdFolderPath).c_str(), NULL);
+				CopyFile(fmt::format("{}\\{}.mp3", robtopSongLoc, songName).c_str(), fmt::format("{}\\{}copy.mp3", folderPath, songName).c_str(), true);
+				CopyFile(fmt::format("{}\\{}.mp3", robtopSongLoc, songName).c_str(), fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songName).c_str(), true);
+				std::string convertWav = fmt::format("ffmpeg -y -i {}copy.mp3 {}wav.wav -loglevel quiet", songName, songName);
+				std::string shiftWav = fmt::format("sox --no-show-progress {}wav.wav {}.wav pitch {}", songName, songName, pitchShift);
+				std::string convertMp3 = fmt::format("ffmpeg -y -i {}.wav -acodec libmp3lame {}.mp3 -loglevel quiet", songName, songName);
+				system(fmt::format("cd {} && {} && {} && {}", folderPath, convertWav, shiftWav, convertMp3).c_str());
+				deleteSongs(folderPath, robtopSongLoc, songID, isRobtopSong);
+			}
+			else log::debug("Original Song Location not found.");
+		}
 	}
 	else if (appdata != NULL && pitchShift == 0) {
-		try {
-			if (std::filesystem::exists(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID))) DeleteFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str());
-			std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
-			FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", songID), "OK")->show();
+		if (!isRobtopSong) {
+			std::string resourcesFolder = gdFolderPath.string();
+			std::string oldPitchFolder = resourcesFolder.substr(0, resourcesFolder.length() - 9);
+			if (std::filesystem::exists(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID))) {
+				DeleteFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str());
+				std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
+				FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", songID), "OK")->show();
+			}
+			else if (std::filesystem::exists(fmt::format("{}\\pitch_backups\\{}.mp3", oldPitchFolder, songID))) {
+				DeleteFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str());
+				std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", oldPitchFolder, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
+				FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", songID), "OK")->show();
+			}
+			else FLAlertLayer::create("Error Occured", "You must pitch a song before you can reset it!\n<cr>(You set pitch value to 0)</c>", "OK")->show();
 		}
-		catch(std::filesystem::filesystem_error const& ex) {
-			FLAlertLayer::create("Error Occured", ex.what(), "OK")->show();
+		else{
+		if (std::filesystem::exists(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songName))) {
+			DeleteFile(fmt::format("{}\\{}.mp3", gdFolderPath, songName).c_str());
+			std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songName).c_str(), fmt::format("{}\\{}.mp3", gdFolderPath, songName).c_str(), std::filesystem::copy_options::update_existing);
+			FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", songName), "OK")->show();
+			}
+			else FLAlertLayer::create("Error Occured", "You must pitch a song before you can reset it!\n<cr>(You set pitch value to 0)</c>", "OK")->show();
 		}
 	}
 }
 
 
-class $modify(PitchLayer, CustomSongWidget) {
-
-int songID;
-
+class $modify(CustomSongWidget) {
 	bool init(SongInfoObject* songInfo, CustomSongDelegate* songDelegate, bool showSongSelect, bool showPlayMusic, bool showDownload, bool isRobtopSong, bool unkBool, bool isMusicLibrary) {
-		if (!CustomSongWidget::init(songInfo, songDelegate, showSongSelect, showPlayMusic, showDownload, isRobtopSong, unkBool, isMusicLibrary)) return false;
-		if (!CCDirector::sharedDirector()->getRunningScene()->getChildByID("LevelEditorLayer")) {
-			m_fields->songID = m_songInfoObject->m_songID;
-			log::info("{}", m_fields->songID);
+		bool result = CustomSongWidget::init(songInfo, songDelegate, showSongSelect, showPlayMusic, showDownload, isRobtopSong, unkBool, isMusicLibrary);
+		songID = m_songInfoObject->m_songID;
+		return result;
+	}
+};
+
+class $modify(PitchLayer, LevelInfoLayer) {
+
+	bool init(GJGameLevel* level, bool isRobTopLevel) {
+		if (!LevelInfoLayer::init(level, isRobTopLevel)) return false;
 
 			CCSprite* pitchBackgroundSprite = CCSprite::createWithSpriteFrameName("GJ_longBtn02_001.png");
+			CCMenu* backMenu = static_cast<CCMenu*>(this->getChildByID("back-menu"));
 			CCMenu* pitchMenu = CCMenu::create();
 			CCMenu* settings_menu = CCMenu::create();
 			CCMenuItemSpriteExtra* pitchBtn = CCMenuItemSpriteExtra::create(pitchBackgroundSprite, this, menu_selector(PitchLayer::songPitch));
@@ -81,37 +155,37 @@ int songID;
 			settingsGear->setScale(0.6);
 			auto settingsBtn = CCMenuItemSpriteExtra::create(settingsGear, this, menu_selector(PitchLayer::openSettings));
 
-			pitchMenu->setPosition(-190, 250);
-			settings_menu->setPosition({pitchMenu->getPositionX() + 65, pitchMenu->getPositionY()});
+			pitchMenu->setPosition({backMenu->getPositionX() + 29, backMenu->getPositionY()});
+			settings_menu->setPosition({pitchMenu->getPositionX() + 57, pitchMenu->getPositionY()});
 			pitchMenu->addChild(pitchBtn);
 
 			pitchText->setPosition({47, 16});
 			pitchText->setScale(0.45);
 
-			pitchOptions->setPosition({pitchMenu->getPositionX() + 33, pitchMenu->getPositionY() - 23});
+			pitchOptions->setPosition({pitchMenu->getPositionX() + 25, pitchMenu->getPositionY() - 23});
 			pitchOptions->setRotation(-5.f);
 
-			settings_menu->addChild(settingsBtn);
-			pitchBtn->addChild(pitchText);
-			addChild(pitchMenu);
-			addChild(settings_menu);
-			addChild(pitchOptions);
+			pitchMenu->setID("xanii.pitch_shifter/pitch-menu");
+			settings_menu->setID("xanii.pitch_shifter/pitch-settings-menu");
+			pitchOptions->setID("xanii.pitch_shifter/pitch-options");
 
-			return true;
+			settings_menu->addChild(settingsBtn, 10);
+			pitchBtn->addChild(pitchText, 11);
+			addChild(pitchMenu, 10);
+			addChild(settings_menu, 10);
+			addChild(pitchOptions, 10);
+		
+			return true;	
 		}
-	}
 
 	void songPitch(CCObject*) {
-		if (m_fields->songID >= 22) {
-			if (Mod::get()->getSettingValue<int64_t>("pitch") != 0) {
-				geode::createQuickPopup("Pitch Shifter", "This will take <cg>~10 seconds</c> to complete.\n<cr>Do not close the game while this processes.</c>", "Cancel", "OK", [this] (auto fl, bool btn2) {
-					if (btn2) pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));});
-			}
-			else {
-				pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));
-			}
+		if (songID >= 22) robSong = false;
+		else robSong = true;
+		if (Mod::get()->getSettingValue<int64_t>("pitch") != 0) {
+			geode::createQuickPopup("Pitch Shifter", "This will take <cg>~10 seconds</c> to complete.\n<cr>Do not close the game while this processes.</c>", "Cancel", "OK", [this] (auto fl, bool btn2) {
+				if (btn2) pitchSong(songID, Mod::get()->getSettingValue<int64_t>("pitch"), robSong);});
 		}
-		else FLAlertLayer::create("Pitch Shifter", "Sorry, you can't pitch main level songs currently!", "OK")->show();
+		else pitchSong(songID, Mod::get()->getSettingValue<int64_t>("pitch"), robSong);
 	}
 
 	void openSettings(CCObject*) {
