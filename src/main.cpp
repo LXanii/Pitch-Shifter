@@ -45,8 +45,14 @@ void pitchSong(int songID, int pitchShift) {
 		else log::debug("Sound file not found");
 	}
 	else if (appdata != NULL && pitchShift == 0) {
-		DeleteFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str());
-		std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
+		try {
+			if (std::filesystem::exists(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID))) DeleteFile(fmt::format("{}\\{}.mp3", songLocation, songID).c_str());
+			std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
+			FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", songID), "OK")->show();
+		}
+		catch(std::filesystem::filesystem_error const& ex) {
+			FLAlertLayer::create("Error Occured", ex.what(), "OK")->show();
+		}
 	}
 }
 
@@ -103,7 +109,6 @@ int songID;
 			}
 			else {
 				pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));
-				FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", m_fields->songID), "OK")->show();
 			}
 		}
 		else FLAlertLayer::create("Pitch Shifter", "Sorry, you can't pitch main level songs currently!", "OK")->show();
