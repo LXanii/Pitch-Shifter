@@ -96,7 +96,7 @@ int songID;
 	}
 
 	void songPitch(CCObject*) {
-		if (m_fields->songID < 22) {
+		if (m_fields->songID >= 22) {
 			if (Mod::get()->getSettingValue<int64_t>("pitch") != 0) {
 				geode::createQuickPopup("Pitch Shifter", "This will take <cg>~10 seconds</c> to complete.\n<cr>Do not close the game while this processes.</c>", "Cancel", "OK", [this] (auto fl, bool btn2) {
 					if (btn2) pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));});
