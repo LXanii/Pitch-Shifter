@@ -1,3 +1,3 @@
-# Template Mod
+# Pitch Shifter
 
-Edit about.md to change this
+Adds a pitch shift button on levelinfolayer to pitch songs!

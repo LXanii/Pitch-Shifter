@@ -57,40 +57,56 @@ int songID;
 
 	bool init(SongInfoObject* songInfo, CustomSongDelegate* songDelegate, bool showSongSelect, bool showPlayMusic, bool showDownload, bool isRobtopSong, bool unkBool, bool isMusicLibrary) {
 		if (!CustomSongWidget::init(songInfo, songDelegate, showSongSelect, showPlayMusic, showDownload, isRobtopSong, unkBool, isMusicLibrary)) return false;
-		m_fields->songID = m_songInfoObject->m_songID;
+		if (!CCDirector::sharedDirector()->getRunningScene()->getChildByID("LevelEditorLayer")) {
+			m_fields->songID = m_songInfoObject->m_songID;
+			log::info("{}", m_fields->songID);
 
-		CCSprite* btnsprite = CCSprite::createWithSpriteFrameName("difficulty_10_btn2_001.png");
-		CCMenu* btnmenu = CCMenu::create();
-		CCMenu* settings_menu = CCMenu::create();
-		CCMenuItemSpriteExtra* btn = CCMenuItemSpriteExtra::create(btnsprite, this, menu_selector(PitchLayer::songPitch));
+			CCSprite* pitchBackgroundSprite = CCSprite::createWithSpriteFrameName("GJ_longBtn02_001.png");
+			CCMenu* pitchMenu = CCMenu::create();
+			CCMenu* settings_menu = CCMenu::create();
+			CCMenuItemSpriteExtra* pitchBtn = CCMenuItemSpriteExtra::create(pitchBackgroundSprite, this, menu_selector(PitchLayer::songPitch));
+			CCSprite* pitchOptions = CCSprite::create("pitchoptions.png"_spr);
+			CCLabelBMFont* pitchText = CCLabelBMFont::create("Pitch", "bigFont.fnt");
 
-		CCSprite* settingsGear = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
-    	settingsGear->setScale(0.6);
-		auto settingsBtn = CCMenuItemSpriteExtra::create(settingsGear, this, menu_selector(PitchLayer::openSettings));
+			pitchBackgroundSprite->setScale(0.75);
+			pitchOptions->setScale(0.8);
 
+			CCSprite* settingsGear = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+			settingsGear->setScale(0.6);
+			auto settingsBtn = CCMenuItemSpriteExtra::create(settingsGear, this, menu_selector(PitchLayer::openSettings));
 
-		btnmenu->setPosition(200, 200);
-		settings_menu->setPosition({btnmenu->getPositionX(), btnmenu->getPositionY() - 30});
+			pitchMenu->setPosition(-190, 250);
+			settings_menu->setPosition({pitchMenu->getPositionX() + 65, pitchMenu->getPositionY()});
+			pitchMenu->addChild(pitchBtn);
 
-		btnmenu->addChild(btn);
-		addChild(btnmenu);
-    	settings_menu->addChild(settingsBtn);
-		addChild(settings_menu);
+			pitchText->setPosition({47, 16});
+			pitchText->setScale(0.45);
 
-		return true;
+			pitchOptions->setPosition({pitchMenu->getPositionX() + 33, pitchMenu->getPositionY() - 23});
+			pitchOptions->setRotation(-5.f);
+
+			settings_menu->addChild(settingsBtn);
+			pitchBtn->addChild(pitchText);
+			addChild(pitchMenu);
+			addChild(settings_menu);
+			addChild(pitchOptions);
+
+			return true;
+		}
 	}
 
 	void songPitch(CCObject*) {
-		if (Mod::get()->getSettingValue<int64_t>("pitch") != 0) {
-			geode::createQuickPopup("Pitch Shifter", "This will take <cg>~10 seconds</c> to complete.\n<cr>Do not close the game while this processes.</c>", "Cancel", "OK", [this] (auto fl, bool btn2) {
-                if (btn2)
+		if (m_fields->songID < 22) {
+			if (Mod::get()->getSettingValue<int64_t>("pitch") != 0) {
+				geode::createQuickPopup("Pitch Shifter", "This will take <cg>~10 seconds</c> to complete.\n<cr>Do not close the game while this processes.</c>", "Cancel", "OK", [this] (auto fl, bool btn2) {
+					if (btn2) pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));});
+			}
+			else {
 				pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));
-			});
+				FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", m_fields->songID), "OK")->show();
+			}
 		}
-		else {
-			pitchSong(m_fields->songID, Mod::get()->getSettingValue<int64_t>("pitch"));
-			FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", m_fields->songID), "OK")->show();
-		}
+		else FLAlertLayer::create("Pitch Shifter", "Sorry, you can't pitch main level songs currently!", "OK")->show();
 	}
 
 	void openSettings(CCObject*) {

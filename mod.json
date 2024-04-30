@@ -8,8 +8,8 @@
 	"description": "A song pitch shifter for GD",
 	"settings": {
 		"pitch": {
-			"name": "Pitch Shift Amount",
-			"description": "Amount to pitch shift by,\n100 = 1 Semitone\n0 = Reset",
+			"name": "Pitch Shift",
+			"description": "Amount to pitch shift by:\n100 = 1 Semitone\n0 = Reset",
 			"type": "int",
 			"default": 0,
 			"min": -400,
@@ -20,7 +20,8 @@
 		"files": [
 			"resources/*.dll",
 			"resources/*.exe",
-			"resources/*.ini"
+			"resources/*.ini",
+			"resources/*.png"
 		]
 	}
 }
