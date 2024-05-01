@@ -1,4 +1,3 @@
-#include <Geode/Geode.hpp>
 #include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/modify/CustomSongWidget.hpp>
 #include <Geode/ui/GeodeUI.hpp>
@@ -6,6 +5,7 @@
 #include <filesystem>
 
 using namespace geode::prelude;
+
 std::string songName;
 int songID;
 bool robSong;
@@ -113,7 +113,7 @@ void pitchSong(int songID, int pitchShift, bool isRobtopSong) {
 				std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", oldPitchFolder, songID).c_str(), fmt::format("{}\\{}.mp3", songLocation, songID).c_str(), std::filesystem::copy_options::update_existing);
 				FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", songID), "OK")->show();
 			}
-			else FLAlertLayer::create("Error Occured", "You must pitch a song before you can reset it!\n<cr>(You set pitch value to 0)</c>", "OK")->show();
+			else FLAlertLayer::create("Pitch Shifter Error", "You must pitch a song before you can reset it!\n<cr>(You set pitch value to 0)</c>", "OK")->show();
 		}
 		else{
 		if (std::filesystem::exists(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songName))) {
@@ -121,11 +121,10 @@ void pitchSong(int songID, int pitchShift, bool isRobtopSong) {
 			std::filesystem::copy(fmt::format("{}\\pitch_backups\\{}.mp3", gdFolderPath, songName).c_str(), fmt::format("{}\\{}.mp3", gdFolderPath, songName).c_str(), std::filesystem::copy_options::update_existing);
 			FLAlertLayer::create("Pitch Shifter", fmt::format("{}.mp3 has been reset back to its normal pitch!", songName), "OK")->show();
 			}
-			else FLAlertLayer::create("Error Occured", "You must pitch a song before you can reset it!\n<cr>(You set pitch value to 0)</c>", "OK")->show();
+			else FLAlertLayer::create("Pitch Shifter Error", "You must pitch a song before you can reset it!\n<cr>(You set pitch value to 0)</c>", "OK")->show();
 		}
 	}
 }
-
 
 class $modify(CustomSongWidget) {
 	bool init(SongInfoObject* songInfo, CustomSongDelegate* songDelegate, bool showSongSelect, bool showPlayMusic, bool showDownload, bool isRobtopSong, bool unkBool, bool isMusicLibrary) {
@@ -136,55 +135,62 @@ class $modify(CustomSongWidget) {
 };
 
 class $modify(PitchLayer, LevelInfoLayer) {
-
+	static void onModify(auto & self)
+	{
+		(void) self.setHookPriority("LevelInfoLayer::init", INT64_MIN + 1);
+	}
 	bool init(GJGameLevel* level, bool isRobTopLevel) {
-		if (!LevelInfoLayer::init(level, isRobTopLevel)) return false;
-			CCSprite* pitchBackgroundSprite = CCSprite::createWithSpriteFrameName("GJ_longBtn02_001.png");
-			CCMenu* backMenu = static_cast<CCMenu*>(this->getChildByID("back-menu"));
-			CCMenu* pitchMenu = CCMenu::create();
-			CCMenu* settings_menu = CCMenu::create();
-			CCMenuItemSpriteExtra* pitchBtn = CCMenuItemSpriteExtra::create(pitchBackgroundSprite, this, menu_selector(PitchLayer::songPitch));
-			CCSprite* pitchOptions = CCSprite::create("pitchoptions.png"_spr);
-			CCLabelBMFont* pitchText = CCLabelBMFont::create("Pitch", "bigFont.fnt");
+		if (!LevelInfoLayer::init(level, isRobTopLevel)) { return false; }
 
-			pitchBackgroundSprite->setScale(0.75);
-			pitchOptions->setScale(0.8);
-
-			CCSprite* settingsGear = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
-			settingsGear->setScale(0.6);
-			auto settingsBtn = CCMenuItemSpriteExtra::create(settingsGear, this, menu_selector(PitchLayer::openSettings));
-
-			pitchMenu->setPosition({backMenu->getPositionX() + 29, backMenu->getPositionY()});
-			settings_menu->setPosition({pitchMenu->getPositionX() + 57, pitchMenu->getPositionY()});
-			pitchMenu->addChild(pitchBtn);
-
-			pitchText->setPosition({47, 16});
-			pitchText->setScale(0.45);
-
-			pitchOptions->setPosition({pitchMenu->getPositionX() + 25, pitchMenu->getPositionY() - 23});
-			pitchOptions->setRotation(-5.f);
-
-			pitchMenu->setID("xanii.pitch_shifter/pitch-menu");
-			settings_menu->setID("xanii.pitch_shifter/pitch-settings-menu");
-			pitchOptions->setID("xanii.pitch_shifter/pitch-options");
-
-			settings_menu->addChild(settingsBtn, 10);
-			pitchBtn->addChild(pitchText, 11);
-			addChild(pitchMenu, 10);
-			addChild(settings_menu, 10);
-			addChild(pitchOptions, 10);
+		auto customSongWidgetButtons = m_songWidget->getChildByID("buttons-menu");
 		
-			return true;	
-		}
+		CCSprite* pitchSettingsButton = CCSprite::create("logo.png"_spr);
+		CCSprite* pitchBackgroundSprite = CCSprite::createWithSpriteFrameName("GJ_longBtn02_001.png");
+		
+		CCLabelBMFont* pitchText = CCLabelBMFont::create("Pitch", "bigFont.fnt");
 
-	void songPitch(CCObject*) {
-		if (songID >= 22) robSong = false;
-		else robSong = true;
+		pitchBackgroundSprite->setScale(0.5);
+		pitchText->setScale(0.35);
+		pitchSettingsButton->setScale(0.2);
+		
+		CCMenuItemSpriteExtra* pitchBtn = CCMenuItemSpriteExtra::create(pitchBackgroundSprite, this, menu_selector(PitchLayer::songPitch));
+		CCMenuItemSpriteExtra* settingsBtn = CCMenuItemSpriteExtra::create(pitchSettingsButton, this, menu_selector(PitchLayer::openSettings));
+
+		pitchText->setPosition({pitchBackgroundSprite->getPositionX(), pitchBackgroundSprite->getPositionY() + 1.25f});
+		pitchBtn->addChild(pitchText, 11);
+		
+		auto moreBtn = customSongWidgetButtons->getChildByID("more-button");
+		pitchBtn->setPosition({moreBtn->getPositionX(), moreBtn->getPositionY() - moreBtn->getContentHeight() + 3.5f});
+		settingsBtn->setPosition({pitchBtn->getPositionX() + (pitchBtn->getContentWidth() / 1.25f), pitchBtn->getPositionY()});
+
+		pitchBtn->setID("pitch-button"_spr);
+		settingsBtn->setID("pitch-settings-button"_spr);
+		
+		customSongWidgetButtons->addChild(pitchBtn);
+		customSongWidgetButtons->addChild(settingsBtn);
+		
+		customSongWidgetButtons->updateLayout();
+		
+		return true;
+	}
+
+	void songPitch(CCObject* sender) {
+		if (songID >= 22) { robSong = false; }
+		else { robSong = true; }
 		if (Mod::get()->getSettingValue<int64_t>("pitch") != 0) {
-			geode::createQuickPopup("Pitch Shifter", "This will take <cg>~10 seconds</c> to complete.\n<cr>Do not close the game while this processes.</c>", "Cancel", "OK", [this] (auto fl, bool btn2) {
-				if (btn2) pitchSong(songID, Mod::get()->getSettingValue<int64_t>("pitch"), robSong);});
+			geode::createQuickPopup(
+				"Pitch Shifter",
+				"This will take <cg>about 10 seconds</c> to complete.\n<cr>Do NOT close the game until this is complete.</c>",
+				"Cancel",
+				"OK",
+				[this] (auto fl, bool btn2) {
+					if (btn2) { pitchSong(songID, Mod::get()->getSettingValue<int64_t>("pitch"), robSong); }
+				}
+			);
 		}
-		else pitchSong(songID, Mod::get()->getSettingValue<int64_t>("pitch"), robSong);
+		else {
+			pitchSong(songID, Mod::get()->getSettingValue<int64_t>("pitch"), robSong);
+		}
 	}
 
 	void openSettings(CCObject*) {
