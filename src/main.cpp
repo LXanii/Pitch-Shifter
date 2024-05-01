@@ -129,7 +129,7 @@ void pitchSong(int songID, int pitchShift, bool isRobtopSong) {
 class $modify(CustomSongWidget) {
 	bool init(SongInfoObject* songInfo, CustomSongDelegate* songDelegate, bool showSongSelect, bool showPlayMusic, bool showDownload, bool isRobtopSong, bool unkBool, bool isMusicLibrary) {
 		bool result = CustomSongWidget::init(songInfo, songDelegate, showSongSelect, showPlayMusic, showDownload, isRobtopSong, unkBool, isMusicLibrary);
-		songID = m_songInfoObject->m_songID; // customSongWidget also renders outside of levelinfolayer
+		if (!CCDirector::sharedDirector()->getRunningScene()->getChildByID("LevelEditorLayer")) songID = m_songInfoObject->m_songID;
 		return result;
 	}
 };
