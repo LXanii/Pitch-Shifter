@@ -130,7 +130,7 @@ void pitchSong(int songID, int pitchShift, bool isRobtopSong) {
 class $modify(CustomSongWidget) {
 	bool init(SongInfoObject* songInfo, CustomSongDelegate* songDelegate, bool showSongSelect, bool showPlayMusic, bool showDownload, bool isRobtopSong, bool unkBool, bool isMusicLibrary) {
 		bool result = CustomSongWidget::init(songInfo, songDelegate, showSongSelect, showPlayMusic, showDownload, isRobtopSong, unkBool, isMusicLibrary);
-		songID = m_songInfoObject->m_songID;
+		if (!CCDirector::sharedDirector()->getRunningScene()->getChildByID("LevelEditorLayer")) songID = m_songInfoObject->m_songID;
 		return result;
 	}
 };
@@ -139,7 +139,6 @@ class $modify(PitchLayer, LevelInfoLayer) {
 
 	bool init(GJGameLevel* level, bool isRobTopLevel) {
 		if (!LevelInfoLayer::init(level, isRobTopLevel)) return false;
-
 			CCSprite* pitchBackgroundSprite = CCSprite::createWithSpriteFrameName("GJ_longBtn02_001.png");
 			CCMenu* backMenu = static_cast<CCMenu*>(this->getChildByID("back-menu"));
 			CCMenu* pitchMenu = CCMenu::create();
