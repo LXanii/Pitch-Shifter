@@ -1,11 +1,13 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/modify/CustomSongWidget.hpp>
+#include <Geode/modify/EditLevelLayer.hpp>
 #include <Geode/ui/GeodeUI.hpp>
 #include <ShlObj_core.h>
 #include <filesystem>
 
 using namespace geode::prelude;
+
 std::string songName;
 int songID;
 bool robSong;
@@ -128,8 +130,8 @@ void pitchSong(int songID, int pitchShift, bool isRobtopSong) {
 
 
 class $modify(CustomSongWidget) {
-	bool init(SongInfoObject* songInfo, CustomSongDelegate* songDelegate, bool showSongSelect, bool showPlayMusic, bool showDownload, bool isRobtopSong, bool unkBool, bool isMusicLibrary) {
-		bool result = CustomSongWidget::init(songInfo, songDelegate, showSongSelect, showPlayMusic, showDownload, isRobtopSong, unkBool, isMusicLibrary);
+	bool init(SongInfoObject* songInfo, CustomSongDelegate* songDelegate, bool showSongSelect, bool showPlayMusic, bool showDownload, bool isRobtopSong, bool unkBool, bool isMusicLibrary, int unk) {
+		bool result = CustomSongWidget::init(songInfo, songDelegate, showSongSelect, showPlayMusic, showDownload, isRobtopSong, unkBool, isMusicLibrary, unk);
 		if (!CCDirector::sharedDirector()->getRunningScene()->getChildByID("LevelEditorLayer")) songID = m_songInfoObject->m_songID;
 		return result;
 	}
@@ -176,6 +178,54 @@ class $modify(PitchLayer, LevelInfoLayer) {
 		
 			return true;	
 		}
+
+	void songPitch(CCObject*) {
+		if (songID >= 22) robSong = false;
+		else robSong = true;
+		if (Mod::get()->getSettingValue<int64_t>("pitch") != 0) {
+			geode::createQuickPopup("Pitch Shifter", "This will take <cg>~10 seconds</c> to complete.\n<cr>Do not close the game while this processes.</c>", "Cancel", "OK", [this] (auto fl, bool btn2) {
+				if (btn2) pitchSong(songID, Mod::get()->getSettingValue<int64_t>("pitch"), robSong);});
+		}
+		else pitchSong(songID, Mod::get()->getSettingValue<int64_t>("pitch"), robSong);
+	}
+
+	void openSettings(CCObject*) {
+    	openSettingsPopup(Mod::get());
+	}
+};
+
+class $modify(EditPitchLayer, EditLevelLayer) {
+	bool init(GJGameLevel* p0) {
+		bool result = EditLevelLayer::init(p0);
+		songID = p0->m_songID;
+		CCSprite* pitchBackgroundSprite = CCSprite::createWithSpriteFrameName("GJ_longBtn02_001.png");
+		pitchBackgroundSprite->setScale(.625);
+		CCMenu* levelSongName = static_cast<CCMenu*>(this->getChildByID("level-song"));
+		CCMenu* pitchMenu = CCMenu::create();
+		CCMenu* settings_menu = CCMenu::create();
+		CCMenuItemSpriteExtra* pitchBtn = CCMenuItemSpriteExtra::create(pitchBackgroundSprite, this, menu_selector(EditPitchLayer::songPitch));
+		CCLabelBMFont* pitchText = CCLabelBMFont::create("Pitch", "bigFont.fnt");
+
+		CCSprite* settingsGear = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+		settingsGear->setScale(0.4);
+		auto settingsBtn = CCMenuItemSpriteExtra::create(settingsGear, this, menu_selector(EditPitchLayer::openSettings));
+
+		pitchMenu->setPosition({levelSongName->getPositionX() - 6, levelSongName->getPositionY() - 23});
+		settings_menu->setPosition({pitchMenu->getPositionX() + 42, pitchMenu->getPositionY()});
+		pitchMenu->addChild(pitchBtn);
+
+		pitchText->setPosition({29, 10.5});
+		pitchText->setScale(0.4);
+
+		pitchMenu->setID("xanii.pitch_shifter/pitch-menu");
+		settings_menu->setID("xanii.pitch_shifter/pitch-settings-menu");
+
+		settings_menu->addChild(settingsBtn, 10);
+		pitchBtn->addChild(pitchText, 11);
+		addChild(pitchMenu, 10);
+		addChild(settings_menu, 10);
+		return result;
+	}
 
 	void songPitch(CCObject*) {
 		if (songID >= 22) robSong = false;

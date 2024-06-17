@@ -1,3 +1,7 @@
+# 1.0.3
+- Added Pitch button to Created Levels
+- Ported to 2.206
+
 # 1.0.2
 - Fixed crash in regards to leveleditorlayer
 

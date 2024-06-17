@@ -1,7 +1,9 @@
 {
-	"geode": "2.0.0-beta.21",
-	"gd": "2.204",
-	"version": "v1.0.2",
+	"geode": "3.0.0-beta.1",
+	"gd": {
+		"win": "2.206"
+	},
+	"version": "v1.0.3",
 	"id": "xanii.pitch_shifter",
 	"name": "Pitch Shifter",
 	"developer": "Xanii",
@@ -21,15 +23,7 @@
 		"files": [
 			"resources/*.dll",
 			"resources/*.exe",
-			"resources/*.ini",
 			"resources/*.png"
 		]
-	},
-	"dependencies": [
-        {
-            "id": "geode.node-ids",
-            "version": ">=v1.7.0",
-            "importance": "required"
-        }
-	]
+	}
 }
