@@ -132,7 +132,7 @@ void pitchSong(int songID, int pitchShift, bool isRobtopSong) {
 class $modify(CustomSongWidget) {
 	bool init(SongInfoObject* songInfo, CustomSongDelegate* songDelegate, bool showSongSelect, bool showPlayMusic, bool showDownload, bool isRobtopSong, bool unkBool, bool isMusicLibrary, int unk) {
 		bool result = CustomSongWidget::init(songInfo, songDelegate, showSongSelect, showPlayMusic, showDownload, isRobtopSong, unkBool, isMusicLibrary, unk);
-		if (!CCDirector::sharedDirector()->getRunningScene()->getChildByID("LevelEditorLayer")) songID = m_songInfoObject->m_songID;
+		if (!CCDirector::sharedDirector()->getRunningScene()->getChildByIDRecursive("LevelEditorLayer")) songID = m_songInfoObject->m_songID;
 		return result;
 	}
 };
@@ -142,7 +142,7 @@ class $modify(PitchLayer, LevelInfoLayer) {
 	bool init(GJGameLevel* level, bool isRobTopLevel) {
 		if (!LevelInfoLayer::init(level, isRobTopLevel)) return false;
 			CCSprite* pitchBackgroundSprite = CCSprite::createWithSpriteFrameName("GJ_longBtn02_001.png");
-			CCMenu* backMenu = static_cast<CCMenu*>(this->getChildByID("back-menu"));
+			CCMenu* backMenu = static_cast<CCMenu*>(this->getChildByIDRecursive("back-menu"));
 			CCMenu* pitchMenu = CCMenu::create();
 			CCMenu* settings_menu = CCMenu::create();
 			CCMenuItemSpriteExtra* pitchBtn = CCMenuItemSpriteExtra::create(pitchBackgroundSprite, this, menu_selector(PitchLayer::songPitch));
@@ -200,7 +200,7 @@ class $modify(EditPitchLayer, EditLevelLayer) {
 		songID = p0->m_songID;
 		CCSprite* pitchBackgroundSprite = CCSprite::createWithSpriteFrameName("GJ_longBtn02_001.png");
 		pitchBackgroundSprite->setScale(.625);
-		CCMenu* levelSongName = static_cast<CCMenu*>(this->getChildByID("level-song"));
+		CCMenu* levelSongName = static_cast<CCMenu*>(this->getChildByIDRecursive("level-song"));
 		CCMenu* pitchMenu = CCMenu::create();
 		CCMenu* settings_menu = CCMenu::create();
 		CCMenuItemSpriteExtra* pitchBtn = CCMenuItemSpriteExtra::create(pitchBackgroundSprite, this, menu_selector(EditPitchLayer::songPitch));

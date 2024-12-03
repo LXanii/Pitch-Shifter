@@ -1,9 +1,9 @@
 {
-	"geode": "3.0.0-beta.1",
+	"geode": "4.0.1",
 	"gd": {
-		"win": "2.206"
+		"win": "2.2074"
 	},
-	"version": "v1.0.3",
+	"version": "v1.0.4",
 	"id": "xanii.pitch_shifter",
 	"name": "Pitch Shifter",
 	"developer": "Xanii",
