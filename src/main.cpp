@@ -72,7 +72,6 @@ void pitchSong(int songID, int pitchShift, bool isRobtopSong) {
 		case 20: songName = "Fingerdash"; break;
 		case 21: songName = "Dash"; break;
 	}
-	log::info("{} {}", songName, songID);
 	if (appdata != NULL && pitchShift != 0) {
 		if (!isRobtopSong) {
 			if (std::filesystem::exists(fmt::format("{}\\{}.mp3", songLocation, songID))) {
